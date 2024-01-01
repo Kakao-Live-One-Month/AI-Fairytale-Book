@@ -4,10 +4,20 @@ const chatMessages = document.querySelector('#chat-messages');
 const userInput = document.querySelector('#user-input input');
 // 전송 버튼
 const sendButton = document.querySelector('#user-input button');
-// 발급받은 OpenAI API 키를 변수로 저장
-const apiKey = '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';
 // OpenAI API 엔드포인트 주소를 변수로 저장
 const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+
+// 발급받은 OpenAI API 키를 변수로 저장
+let apiKey;
+
+fetch('application-secret.json')
+    .then(response => response.json())
+    .then(data => {
+        apiKey = data.OPENAI_API_KEY;
+        console.log(apiKey);
+    })
+    .catch(error => console.error('Error loading application-secret.json', error));
+
 // GPT에 요청 보낼 기본 프롬프트 
 const defaultPrompt = `너는 동화책 작가로, 키워드를 입력받으면 해당 키워드와 관련된 동화 이야기를 생성해야 해. `
                     + `각 문단이 끝날 때마다 방금 끝난 문단을 분석하여 해당 문단에 어울리는 이미지 생성을 위한 프롬프트도 추가해야 해. `
