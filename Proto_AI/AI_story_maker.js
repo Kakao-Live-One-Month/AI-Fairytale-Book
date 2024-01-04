@@ -15,13 +15,17 @@ fetch('application-secret.json')
     .then(response => response.json())
     .then(data => {
         apiKey = data.OPENAI_API_KEY;
-        console.log(apiKey);
     })
     .catch(error => console.error('Error loading application-secret.json', error));
 
 // GPT에 요청 보낼 기본 프롬프트 
-const defaultPrompt = `키워드에 맞는 동화책 내용을 완벽한 JSON 형식으로 {paragraphs: [{paragraph_id: , paragraph_text: , paragraph_image_prompt: }, ]}으로만 작성해줘, paragraph_text와 paragraph_image_promt는 동화책 내용에 관한거야, `;
-// const IdPrompt = `paragraph_id는 1 ~ 10까지, `;
+const defaultPrompt = `키워드에 맞는 동화책 내용을 완벽한 JSON 형식으로 {paragraphs: [{paragraph_id: , paragraph_text: , paragraph_image_prompt: }, ]}으로만 작성해주세요, `
+                    + `paragraph_text와 paragraph_image_promt는 동화책 내용에 관한거야, `
+                    + `paragraph_image_prompt는 paragraph_text에 대한 이미지를 생성하기 위한 프롬프트입니다, `
+                    + `paragraph_image_prompt는 공백이 없어야 됩니다, `
+                    + `JSON 외에 설명을 쓰지 마세요, `;
+
+const IdPrompt = `paragraph_id는 1 ~ 10까지 출력해야하는데 동화책은 paragraph_id: 10 에서 완결이 나야 합니다, `;
 
 function addMessage(image, story) {
     // console.log(image);
@@ -116,7 +120,7 @@ const responseArray = "현재 출력된 문자열: ";
 sendButton.addEventListener('click', async () => {
     // 사용자가 입력한 메시지
     const keyword = userInput.value.trim();
-    const storyPrompt = `키워드: ${keyword}. ` + defaultPrompt;
+    const storyPrompt = `키워드: ${keyword}. ` + defaultPrompt + IdPrompt;
     const tokens = 2048;
 
     // 메시지가 비어있으면 리턴
