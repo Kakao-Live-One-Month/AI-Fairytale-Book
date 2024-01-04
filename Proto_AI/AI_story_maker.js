@@ -4,6 +4,7 @@ const chatMessages = document.querySelector('#chat-messages');
 const userInput = document.querySelector('#user-input input');
 // 전송 버튼
 const sendButton = document.querySelector('#user-input button');
+const eventButton = document.querySelector('#reprint');
 // OpenAI API 엔드포인트 주소를 변수로 저장
 const apiEndpoint = 'https://api.openai.com/v1/chat/completions';
 
@@ -19,10 +20,8 @@ fetch('application-secret.json')
     .catch(error => console.error('Error loading application-secret.json', error));
 
 // GPT에 요청 보낼 기본 프롬프트 
-const defaultPrompt = `너는 동화책 작가로, 키워드를 입력받으면 해당 키워드와 관련된 동화 이야기를 생성해야 해. `
-                    + `각 문단이 끝날 때마다 방금 끝난 문단을 분석하여 해당 문단에 어울리는 이미지 생성을 위한 프롬프트도 추가해야 해. `
-                    + `첫 문단부터 마지막 문단까지. [샘플 이야기 문단] [이야기 문단의 프롬프트]. `
-
+const defaultPrompt = `키워드에 맞는 동화책 내용을 완벽한 JSON 형식으로 {paragraphs: [{paragraph_id: , paragraph_text: , paragraph_image_prompt: }, ]}으로만 작성해줘, paragraph_text와 paragraph_image_promt는 동화책 내용에 관한거야, `;
+// const IdPrompt = `paragraph_id는 1 ~ 10까지, `;
 
 function addMessage(image, story) {
     // console.log(image);
@@ -103,6 +102,7 @@ async function fetchAIResponse(prompt, tokens) {
     
         const aiResponse = data.choices[0].message.content;
         console.log(aiResponse);
+        console.log(typeof(aiResponse));
         return aiResponse;
     } catch (error) {
         console.error('OpenAI API 호출 중 오류 발생:', error.message);
@@ -110,12 +110,14 @@ async function fetchAIResponse(prompt, tokens) {
     }
 }
 
+
+const responseArray = "현재 출력된 문자열: ";
 // 전송 버튼 클릭 이벤트 처리
 sendButton.addEventListener('click', async () => {
     // 사용자가 입력한 메시지
     const keyword = userInput.value.trim();
-    const storyPrompt = defaultPrompt + `키워드: ${keyword}`;
-    const tokens = 1024;
+    const storyPrompt = `키워드: ${keyword}. ` + defaultPrompt;
+    const tokens = 2048;
 
     // 메시지가 비어있으면 리턴
     if (keyword.length === 0) return;
@@ -126,28 +128,51 @@ sendButton.addEventListener('click', async () => {
 
     //ChatGPT API 요청후 답변을 화면에 추가
     const aiResponse = await fetchAIResponse(storyPrompt, tokens);
+    const splitResponse = aiResponse.split('\n').join('');
+    console.log(splitResponse);
+
+    try {
+        const jsonObject = await JSON.parse(splitResponse);
+        // responseArray += jsonObject[0].paragraph_text + jsonObject[1].parapraph_text + jsonObject[2].parapraph_text;
+        console.log(jsonObject);
+        console.log(jsonObject.paragraphs);
+    }
+    catch (error) {
+        console.log("Error parsing JSON", error);
+    }
+
+
+
+
 
     // '\n'로 문단을 분리하고 각 문단에 대해 처리
-    const paragraphs = aiResponse.split('\n');
+    // const paragraphs = aiResponse.split('\n');
 
-    const storyAndImageList = []
+    // const storyAndImageList = []
 
-    paragraphs.forEach(paragraph => {
-        if (!paragraph.trim()) {
-            return;
-        }
+    // paragraphs.forEach(paragraph => {
+    //     if (!paragraph.trim()) {
+    //         return;
+    //     }
 
-        storyAndImageList.push(paragraph);
-    });
+    //     storyAndImageList.push(paragraph);
+    // });
 
-    storyAndImageList.forEach((_, index) => {
-        if (index % 2 === 1) {
-            // console.log("image: " + storyAndImageList[index]);
-            // console.log("story: " + storyAndImageList[index-1]);
-            addMessage(storyAndImageList[index], storyAndImageList[index - 1]);
-        }
-    });
+    // storyAndImageList.forEach((_, index) => {
+    //     if (index % 2 === 1) {
+    //         // console.log("image: " + storyAndImageList[index]);
+    //         // console.log("story: " + storyAndImageList[index-1]);
+    //         addMessage(storyAndImageList[index], storyAndImageList[index - 1]);
+    //     }
+    // });
     
+});
+
+eventButton.addEventListener('click', async () => {
+    const storyPrompt = `키워드: ${keyword} ` + defaultPrompt + IdPrompt;
+    const tokens = 1024;
+    //ChatGPT API 요청후 답변을 화면에 추가
+    const aiResponse = await fetchAIResponse(storyPrompt, tokens);
 });
 
 // 사용자 입력 필드에서 Enter 키 이벤트를 처리
